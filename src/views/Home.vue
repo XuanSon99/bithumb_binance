@@ -3,10 +3,10 @@
     <v-container>
       <v-row>
         <v-col cols="12" md="2">
-          <v-text-field v-model="krw_rate" label="Rate (KRW/VNĐ)" outlined dense></v-text-field>
+          <v-text-field v-model="krw_rate" label="Rate (KRW/VNĐ)" outlined dense clearable></v-text-field>
         </v-col>
         <v-col cols="12" md="2">
-          <v-text-field v-model="usdt_rate" label="Rate (USDT/VNĐ)" outlined dense></v-text-field>
+          <v-text-field v-model="usdt_rate" label="Rate (USDT/VNĐ)" outlined dense clearable></v-text-field>
         </v-col>
       </v-row>
       <v-row>
