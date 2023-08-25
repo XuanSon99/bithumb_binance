@@ -1,0 +1,27 @@
+@media (max-width: 1024px) {
+    .mowtainer {
+        width: 90%;
+    }
+}
+
+
+@media (max-width: 768px) {
+    .space {
+        flex-wrap: wrap;
+    }
+
+    .mowtainer {
+        width: 90%;
+    }
+}
+
+@media (max-width: 480px) {
+
+    main {
+        padding: 20px;
+    }
+    .login .v-card {
+        width: 100%;
+    }
+
+}
