@@ -10,10 +10,17 @@
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="12" md="6">
-          <v-data-table :headers="headers" :items="bithumb_list" class="elevation-1" :mobile-breakpoint="0">
+        <v-col cols="12">
+          <v-data-table :headers="headers" :items="bithumb_list" class="elevation-1" :mobile-breakpoint="0"
+            :search="search">
             <template v-slot:[`item.price`]="{ item }">
-              {{ formatMoney(item.price) }}
+              {{ formatPrice(item.price) }}
+            </template>
+            <template v-slot:[`item.usdt_price`]="{ item }">
+              {{ formatPrice(usdt_price(item)) }}
+            </template>
+            <template v-slot:[`item.vnd_price`]="{ item }">
+              {{ formatPrice(vnd_price(item)) }}
             </template>
             <template v-slot:[`item.percent`]="{ item }">
               <span class="green-cl" v-if="item.percent > 0">{{ formatPrice(item.percent) }}</span>
@@ -21,20 +28,17 @@
             </template>
           </v-data-table>
         </v-col>
-        <v-col cols="12" md="6">
-          <v-data-table :headers="headers2" :items="binance_list" class="elevation-1" :mobile-breakpoint="0">
-            <template v-slot:[`item.price`]="{ item }">
-              {{ formatPrice(item.price) }}
-            </template>
-            <template v-slot:[`item.vnd`]="{ item }">
-              {{ formatMoney(item.vnd) }}
-            </template>
-          </v-data-table>
+      </v-row>
+      <v-row>
+        <v-col cols="12" md="2">
+          <v-text-field v-model="search" label="Tìm kiếm" outlined dense clearable></v-text-field>
+        </v-col>
+        <v-col cols="12" md="2">
+          <v-btn @click="logout()" block>
+            Đăng xuất
+          </v-btn>
         </v-col>
       </v-row>
-      <v-btn class="mt-5" @click="logout()">
-        Đăng xuất
-      </v-btn>
     </v-container>
   </main>
 </template>
@@ -44,17 +48,15 @@ import axios from 'axios'
 export default {
   data() {
     return {
+      search: '',
       krw_rate: 20.669,
       usdt_rate: 23680,
       headers: [
         { text: 'Token', value: 'token' },
-        { text: 'Price', value: 'price' },
+        { text: 'KRW (Bithumb)', value: 'price' },
+        { text: 'USDT (Binance)', value: 'usdt_price' },
+        { text: 'VND', value: 'vnd_price' },
         { text: '%', value: 'percent' },
-      ],
-      headers2: [
-        { text: 'Token', value: 'token' },
-        { text: 'Price', value: 'price' },
-        { text: 'VND', value: 'vnd' },
       ],
       bithumb_list: [],
       binance_list: [],
@@ -68,7 +70,7 @@ export default {
     }, 2000);
   },
   methods: {
-    logout(){
+    logout() {
       localStorage.removeItem('loged')
       this.$router.push("/login")
     },
@@ -120,15 +122,22 @@ export default {
       let token = this.binance_list.filter((i) => i.token == `${item.token}USDT`)[0]
       return token ? ((item.price * this.krw_rate - token.vnd) / token.vnd) * 100 : 0
     },
-    formatMoney(value) {
-      if (!value) return 0;
-      return String(parseFloat(value).toFixed(0))
-        .toString()
-        .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    usdt_price(item) {
+      let token = this.binance_list.filter((i) => i.token == `${item.token}USDT`)[0]
+      return token.price
+    },
+    vnd_price(item) {
+      let token = this.binance_list.filter((i) => i.token == `${item.token}USDT`)[0]
+      return token.vnd
     },
     formatPrice(value) {
-      let val = (value / 1).toFixed(2).replace(".", ",");
-      return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      if (!value) return 0;
+      if (String(value).slice(0, 6) == '0.0000') return parseFloat(value).toFixed(6);
+      if (String(value).slice(0, 2) == '0.') return parseFloat(value).toFixed(4);
+      return String(parseFloat(value).toFixed(2))
+        .toString()
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        .replace('.00', '')
     },
   },
   beforeDestroy() {
