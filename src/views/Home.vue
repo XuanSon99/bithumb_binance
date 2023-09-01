@@ -12,9 +12,12 @@
       <v-row>
         <v-col cols="12">
           <v-data-table :headers="headers" :items="bithumb_list" class="elevation-1" :mobile-breakpoint="0"
-            :search="search">
+            :search="search" fixed-header>
             <template v-slot:[`item.price`]="{ item }">
               {{ formatPrice(item.price) }}
+            </template>
+            <template v-slot:[`item.upbit`]="{ item }">
+              {{ formatPrice(upbit_price(item)) }}
             </template>
             <template v-slot:[`item.usdt_price`]="{ item }">
               {{ formatPrice(usdt_price(item)) }}
@@ -25,6 +28,10 @@
             <template v-slot:[`item.percent`]="{ item }">
               <span class="green-cl" v-if="item.percent > 0">{{ formatPrice(item.percent) }}</span>
               <span class="red-cl" v-if="item.percent < 0">{{ formatPrice(item.percent) }}</span>
+            </template>
+            <template v-slot:[`item.upbit_percent`]="{ item }">
+              <span class="green-cl" v-if="item.upbit_percent > 0">{{ formatPrice(item.upbit_percent) }}</span>
+              <span class="red-cl" v-if="item.upbit_percent < 0">{{ formatPrice(item.upbit_percent) }}</span>
             </template>
           </v-data-table>
         </v-col>
@@ -49,30 +56,51 @@ export default {
   data() {
     return {
       search: '',
-      krw_rate: 20.669,
-      usdt_rate: 23680,
+      krw_rate: 18,
+      usdt_rate: 24000,
       headers: [
         { text: 'Token', value: 'token', sortable: false, },
-        { text: 'KRW', value: 'price', sortable: false, },
+        { text: 'KRW-BT', value: 'price', sortable: false, },
+        { text: 'KRW-UB', value: 'upbit', sortable: false, },
         { text: 'USDT', value: 'usdt_price', sortable: false, },
-        { text: '%', value: 'percent' },
+        { text: '% BT', value: 'percent' },
+        { text: '% UB', value: 'upbit_percent' },
         { text: 'VND', value: 'vnd_price', sortable: false, },
       ],
       bithumb_list: [],
       binance_list: [],
+      upbit_list: [],
       interval: '',
     }
   },
   mounted() {
     this.getBinance()
+    this.getUpbit()
     this.interval = setInterval(() => {
       this.getBinance()
+      this.getUpbit()
     }, 2000);
   },
   methods: {
     logout() {
       localStorage.removeItem('loged')
       this.$router.push("/login")
+    },
+    getUpbit() {
+      let symbols = ['KRW-BTC', 'KRW-ETH', 'KRW-ETC', 'KRW-XRP', 'KRW-BCH', 'KRW-QTUM', 'KRW-BTG', 'KRW-EOS', 'KRW-TRX', "KRW-ICX", "KRW-ELF", "KRW-KNC", "KRW-GLM", "KRW-ZIL", "KRW-WAXP", "KRW-POWR", "KRW-STEEM", "KRW-STRAX", "KRW-ZRX", "KRW-SNT", "KRW-ADA", "KRW-BAT", "KRW-THETA", "KRW-LOOM", "KRW-WAVES", "KRW-LINK", "KRW-ENJ", "KRW-VET", "KRW-MTL", "KRW-IOST", "KRW-QKC", "KRW-TFUEL", "KRW-ANKR", "KRW-MBL", "KRW-SXP", "KRW-HIVE", "KRW-AERGO", "KRW-AAVE", "KRW-SAND", "KRW-STPT", "KRW-GRT", "KRW-PLA", "KRW-MANA", "KRW-PUNDIX", "KRW-CHZ", "KRW-AXS", "KRW-ONT", "KRW-SHIB", "KRW-ONG", "KRW-MATIC", "KRW-ALGO", "KRW-XLM", "KRW-XEC", "KRW-SOL", "KRW-XTZ", "KRW-JST", "KRW-DOT", "KRW-ATOM", "KRW-EGLD", "KRW-MASK", "KRW-1INCH", "KRW-FLOW", "KRW-AVAX", "KRW-GMT", "KRW-BTT", "KRW-T", "KRW-DOGE", "KRW-APT", "KRW-STX", "KRW-SEI", "KRW-ARB", "KRW-CELO", "KRW-IMX", "KRW-SUI"]
+      axios.get('https://api.upbit.com/v1/ticker', {
+        params: {
+          markets: symbols.join(",")
+        }
+      }).then((res) => {
+        this.upbit_list = []
+        res.data.forEach(item => {
+          this.upbit_list.push({
+            token: item.market.split("-")[1],
+            price: item.trade_price
+          })
+        });
+      })
     },
     getBithumb() {
       axios.get('https://api.bithumb.com/public/ticker/ALL_KRW').then((res) => {
@@ -89,7 +117,8 @@ export default {
             this.bithumb_list.push({
               token: item.token,
               price: item.price,
-              percent: this.percent(item)
+              percent: this.percent(item),
+              upbit_percent: this.upbit_percent(item)
             })
           }
         });
@@ -129,6 +158,15 @@ export default {
     vnd_price(item) {
       let token = this.binance_list.filter((i) => i.token == `${item.token}USDT`)[0]
       return token.vnd
+    },
+    upbit_price(item){
+      let token = this.upbit_list.filter((i) => i.token == item.token)[0]
+      return token ? token.price : 0
+    },
+    upbit_percent(item) {
+      let binance = this.binance_list.filter((i) => i.token == `${item.token}USDT`)[0]
+      let upbit = this.upbit_list.filter((i) => i.token == item.token)[0]
+      return upbit && binance ? ((upbit.price * this.krw_rate - binance.vnd) / binance.vnd) * 100 : 0
     },
     formatPrice(value) {
       if (!value) return 0;
