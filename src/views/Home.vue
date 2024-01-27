@@ -56,8 +56,8 @@ export default {
   data() {
     return {
       search: '',
-      krw_rate: 18,
-      usdt_rate: 24000,
+      krw_rate: 18.2,
+      usdt_rate: 25000,
       headers: [
         { text: 'Token', value: 'token', sortable: false, },
         { text: 'KRW-BT', value: 'price', sortable: false, },
@@ -87,7 +87,7 @@ export default {
       this.$router.push("/login")
     },
     getUpbit() {
-      let symbols = ['KRW-BTC', 'KRW-ETH', 'KRW-ETC', 'KRW-XRP', 'KRW-BCH', 'KRW-QTUM', 'KRW-BTG', 'KRW-EOS', 'KRW-TRX', "KRW-ICX", "KRW-ELF", "KRW-KNC", "KRW-GLM", "KRW-ZIL", "KRW-WAXP", "KRW-POWR", "KRW-STEEM", "KRW-STRAX", "KRW-ZRX", "KRW-SNT", "KRW-ADA", "KRW-BAT", "KRW-THETA", "KRW-LOOM", "KRW-WAVES", "KRW-LINK", "KRW-ENJ", "KRW-VET", "KRW-MTL", "KRW-IOST", "KRW-QKC", "KRW-TFUEL", "KRW-ANKR", "KRW-MBL", "KRW-SXP", "KRW-HIVE", "KRW-AERGO", "KRW-AAVE", "KRW-SAND", "KRW-STPT", "KRW-GRT", "KRW-PLA", "KRW-MANA", "KRW-PUNDIX", "KRW-CHZ", "KRW-AXS", "KRW-ONT", "KRW-SHIB", "KRW-ONG", "KRW-MATIC", "KRW-ALGO", "KRW-XLM", "KRW-XEC", "KRW-SOL", "KRW-XTZ", "KRW-JST", "KRW-DOT", "KRW-ATOM", "KRW-EGLD", "KRW-MASK", "KRW-1INCH", "KRW-FLOW", "KRW-AVAX", "KRW-GMT", "KRW-BTT", "KRW-T", "KRW-DOGE", "KRW-APT", "KRW-STX", "KRW-SEI", "KRW-ARB", "KRW-CELO", "KRW-IMX", "KRW-SUI"]
+      let symbols = ['KRW-BTC', 'KRW-ETH', 'KRW-ETC', 'KRW-XRP', 'KRW-BCH', 'KRW-QTUM', 'KRW-BTG', 'KRW-EOS', 'KRW-TRX', "KRW-ICX", "KRW-ELF", "KRW-KNC", "KRW-GLM", "KRW-ZIL", "KRW-WAXP", "KRW-POWR", "KRW-STEEM", "KRW-STRAX", "KRW-ZRX", "KRW-SNT", "KRW-ADA", "KRW-BAT", "KRW-THETA", "KRW-LOOM", "KRW-WAVES", "KRW-LINK", "KRW-VET", "KRW-MTL", "KRW-IOST", "KRW-QKC", "KRW-TFUEL", "KRW-ANKR", "KRW-MBL", "KRW-SXP", "KRW-HIVE", "KRW-AERGO", "KRW-AAVE", "KRW-SAND", "KRW-STPT", "KRW-GRT", "KRW-PLA", "KRW-MANA", "KRW-PUNDIX", "KRW-CHZ", "KRW-AXS", "KRW-ONT", "KRW-SHIB", "KRW-ONG", "KRW-MATIC", "KRW-ALGO", "KRW-XLM", "KRW-XEC", "KRW-SOL", "KRW-XTZ", "KRW-JST", "KRW-DOT", "KRW-ATOM", "KRW-EGLD", "KRW-MASK", "KRW-1INCH", "KRW-FLOW", "KRW-AVAX", "KRW-GMT", "KRW-BTT", "KRW-T", "KRW-DOGE", "KRW-APT", "KRW-STX", "KRW-SEI", "KRW-ARB", "KRW-CELO", "KRW-IMX", "KRW-SUI"]
       axios.get('https://api.upbit.com/v1/ticker', {
         params: {
           markets: symbols.join(",")
@@ -111,6 +111,7 @@ export default {
             price: res.data.data[i].closing_price
           })
         }
+        list.unshift(list.splice(list.findIndex(i => i.token == "USDT"), 1)[0]);
         this.bithumb_list = []
         list.forEach(item => {
           if (this.percent(item) != 0) {
@@ -134,7 +135,11 @@ export default {
           symbols: JSON.stringify(symbols)
         }
       }).then((res) => {
-        this.binance_list = []
+        this.binance_list = [{
+          token: "USDTUSDT",
+          price: 1,
+          vnd: this.usdt_rate
+        }]
         res.data.forEach(i => {
           this.binance_list.push({
             token: i.symbol,
